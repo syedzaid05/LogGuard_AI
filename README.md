@@ -1,11 +1,37 @@
 # 🛡️ LogGuard AI
 
-Static analysis + AI recommendations for **Python security and logging hygiene**.
+**Static analysis + AI recommendations for Python security and logging hygiene.**
 
-LogGuard AI scans Python code (single files, pasted snippets, ZIP projects, local
-folders or GitHub repositories), reports risky patterns and credential leaks with
-severity/confidence/evidence, and uses an LLM (Groq, Google Gemini or xAI Grok) to
-explain the impact and suggest concrete fixes.
+LogGuard AI scans Python code — a single file, a pasted snippet, a ZIP project, a
+local folder or a GitHub repository — reports risky patterns and credential leaks
+with severity, confidence and evidence, and uses an LLM (Groq, Google Gemini or
+xAI Grok) to explain the real-world impact and suggest concrete fixes.
+
+```
+files=34  lines=6394  findings=8   risk=15.4 (Low)
+Medium EX002  src/requests/utils.py:178  Swallowed exception
+Low    LG001  src/requests/help.py:128   print() used instead of a logger
+```
+
+---
+
+## Table of contents
+
+- [Features](#features)
+- [Architecture](#architecture)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the app](#running-the-app)
+- [Command-line interface](#command-line-interface)
+- [Detection rules](#detection-rules)
+- [Scoring model](#scoring-model)
+- [Suppressing a finding](#suppressing-a-finding)
+- [Testing](#testing)
+- [Project layout](#project-layout)
+- [Limitations](#limitations)
+
+---
 
 ## Features
 
@@ -18,6 +44,7 @@ explain the impact and suggest concrete fixes.
 - **Safe by design** — input validation, path-traversal guards, size/line limits, binary skip.
 - **Low noise** — test/example/vendor dirs skipped, `# noqa` honored, re-raise and
   `usedforsecurity=False` aware.
+- **CI ready** — `--fail-on` gate and a JSON/HTML report for automation.
 
 ## Architecture
 
@@ -62,6 +89,12 @@ explain the impact and suggest concrete fixes.
           └────────────────────┘      └─────────────────────┘
 ```
 
+## Requirements
+
+- Python **3.10+**
+- Runtime dependencies: `streamlit`, `python-dotenv`, `requests`, `pandas`
+  (see [`requirements.txt`](requirements.txt))
+
 ## Installation
 
 ```powershell
@@ -70,22 +103,35 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+To install the `logguard` console script as an editable package:
+
+```powershell
+pip install -e .
+```
+
 ## Configuration
 
-Copy `.env.example` to `.env` and add at least one LLM key (AI features are
-optional — scanning works without any key).
+Copy `.env.example` to `.env` and add at least one LLM key. **AI features are
+optional** — scanning, scoring and reporting all work without any key.
 
-| Variable          | Purpose                                              |
-|-------------------|------------------------------------------------------|
-| `GROQ_API_KEY`    | Groq Cloud key (starts with `gsk_`) — OpenAI-compatible |
-| `XAI_API_KEY`     | xAI Grok key (starts with `xai-`) — optional         |
-| `GEMINI_API_KEY`  | Google Gemini API key                                 |
-| `LLM_PROVIDER`    | Default provider: `groq`, `gemini` or `xai`           |
-| `GITHUB_TOKEN`    | Optional — scan private repos / raise rate limits     |
+| Variable         | Default                              | Purpose                                                    |
+|------------------|--------------------------------------|------------------------------------------------------------|
+| `GROQ_API_KEY`   | —                                    | Groq Cloud key (starts with `gsk_`) — OpenAI-compatible      |
+| `GROQ_API_BASE`  | `https://api.groq.com/openai/v1`     | Groq API base URL                                          |
+| `GROQ_MODEL`     | `openai/gpt-oss-120b`                | Groq model ID                                              |
+| `GEMINI_API_KEY` | —                                    | Google Gemini API key                                      |
+| `GEMINI_MODEL`   | `gemini-flash-latest`                | Gemini model ID                                            |
+| `GEMINI_API_BASE`| `.../v1beta`                         | Gemini API base URL                                        |
+| `XAI_API_KEY`    | —                                    | xAI Grok key (starts with `xai-`) — optional               |
+| `XAI_API_BASE`   | `https://api.x.ai/v1`                | xAI API base URL                                           |
+| `XAI_MODEL`      | `grok-2-latest`                      | xAI model ID                                               |
+| `LLM_PROVIDER`   | `groq`                               | Default provider: `groq`, `gemini` or `xai`                |
+| `GITHUB_TOKEN`   | —                                    | Optional — scan private repos / raise GitHub rate limits   |
 
-Model IDs live in the same file (`GROQ_MODEL`, `GEMINI_MODEL`, `XAI_MODEL`).
+Any key left as a placeholder (`your_...`, `changeme`, empty) is treated as
+unset. Run `python -m logguard providers` to see which providers are configured.
 
-## Running
+## Running the app
 
 ```powershell
 streamlit run app.py
@@ -93,17 +139,21 @@ streamlit run app.py
 
 Then open the URL Streamlit prints (default http://localhost:8501).
 
-1. **Scan** → pick an input source and run.
+1. **Scan** → pick an input source (paste, `.py`, ZIP, GitHub repo, or local folder) and run.
 2. **Dashboard** → risk score, severity breakdown, top findings.
 3. **Findings** → filter by severity/category, inspect code + recommendation + AI fix.
 4. **Reports** → download JSON or HTML.
 
 ### Scan a GitHub repository
 
-Choose **GitHub repository** and enter either `owner/repo` or a full URL
-(`https://github.com/owner/repo/tree/branch`). The repo is fetched as a ZIP
-archive via the GitHub API — no `git` binary required. Set `GITHUB_TOKEN` for
-private repos.
+Choose **GitHub repository** and enter any of:
+
+- `owner/repo`
+- `https://github.com/owner/repo`
+- `https://github.com/owner/repo/tree/<branch>`
+
+The repo is fetched as a ZIP archive via the GitHub API — **no `git` binary
+required**. Set `GITHUB_TOKEN` for private repositories or to raise rate limits.
 
 ## Command-line interface
 
@@ -127,24 +177,18 @@ python -m logguard providers
 | `--json PATH` / `--html PATH` | write machine-readable / standalone HTML reports |
 | `--ai` | add AI explanations and fixes |
 | `--provider {groq,gemini,xai}` | choose the LLM provider |
+| `--ai-limit N` | max findings to enrich with AI (default `20`) |
 | `--min-severity {Critical..Info}` | only display findings at/above this level |
 | `--fail-on {Critical..Info}` | exit `1` if any finding is at/above this level (CI gate) |
 | `-v` / `-q` | verbose (show recommendations) / quiet |
+| `--version` | print the version and exit |
 
 After `pip install -e .` the shorter `logguard scan ...` command is available.
 
-## Testing
-
-```powershell
-pip install -r requirements-dev.txt
-python -m pytest
-```
-
-The suite covers every detector rule, the risk engine (dedup/ranking/score),
-input handling (paste, ZIP traversal guards, folder discovery), reporting, the
-GitHub URL parser and the CLI.
-
 ## Detection rules
+
+28 rules across 5 detector families. See [`docs/RULES.md`](docs/RULES.md) for
+triggers and confidence details.
 
 | ID    | Detector          | Severity | Description                                    |
 |-------|-------------------|----------|------------------------------------------------|
@@ -177,6 +221,25 @@ GitHub URL parser and the CLI.
 | WS005 | Web Security      | Medium   | Weak cipher / ECB mode                         |
 | WS006 | Web Security      | Medium   | `assert` guarding an authorization check       |
 
+## Scoring model
+
+- **Severity** — `Critical`, `High`, `Medium`, `Low`, `Info` (weights 10 / 6 / 3 / 1 / 0.2).
+- **Confidence** — `High` (×1.0), `Medium` (×0.7), `Low` (×0.4).
+- **Risk score** — `100 × (1 − e^(−Σ/60))`, where each rule contributes its worst
+  instance plus a logarithmic bonus for repeats, so one noisy rule cannot
+  saturate the score.
+
+| Risk score | Rating   |
+|------------|----------|
+| ≥ 75       | Critical |
+| ≥ 50       | High     |
+| ≥ 25       | Medium   |
+| > 0        | Low      |
+| 0          | Clean    |
+
+Processing limits: `MAX_FILE_BYTES` 1.5 MB per file, `MAX_TOTAL_BYTES` 25 MB per
+scan, `MAX_FILES` 500 and `MAX_FILE_LINES` 20,000 (see `logguard/config.py`).
+
 ## Suppressing a finding
 
 Add `# noqa` to the offending line and LogGuard AI will skip findings on it:
@@ -188,6 +251,18 @@ try:
 except ImportError:  # noqa
     pass
 ```
+
+## Testing
+
+```powershell
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+The suite covers every detector rule, the risk engine (dedup/ranking/score),
+input handling (paste, ZIP traversal guards, folder discovery), reporting, the
+GitHub URL parser and the CLI. CI runs it on Python 3.10–3.13 and self-scans the
+package with `--fail-on High`.
 
 ## Project layout
 
@@ -205,18 +280,9 @@ logguard/
   risk_engine.py          dedup, ranking, 0-100 risk score
   ai_module.py            Groq / Gemini / xAI clients
   reporting.py            JSON + HTML export
-  detectors/              logging, exception, secret, code-quality rules
+  detectors/              logging, exception, secret, code-quality, web-security rules
 tests/                    pytest suite
 docs/                     rule & architecture references
-```
-
-## Example: scanning `psf/requests`
-
-```
-files=34  lines=6394  findings=8   risk=15.4 (Low)
-Medium EX002  src/requests/utils.py:178  Swallowed exception
-Low    LG001  src/requests/help.py:128   print() used instead of a logger
-...
 ```
 
 ## Limitations

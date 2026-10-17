@@ -74,7 +74,7 @@ input source
 ## Key types (`logguard/models.py`)
 
 - `Severity` — `Critical|High|Medium|Low|Info` (with `rank`).
-- `Category` — `Logging|Exception Handling|Secrets|Code Quality`.
+- `Category` — `Logging|Exception Handling|Secrets|Code Quality|Web Security`.
 - `Finding` — rule id, detector, category, severity, confidence, title, message,
   file/line/column, code, evidence, recommendation, CWE and optional AI fields.
 - `ScanResult` — target, findings, file/line counts, errors and a severity summary.
