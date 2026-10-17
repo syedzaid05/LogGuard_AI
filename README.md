@@ -10,8 +10,8 @@ explain the impact and suggest concrete fixes.
 ## Features
 
 - **Multiple inputs** — pasted code, `.py` file, `.zip` project, local folder, GitHub repo.
-- **Static analysis engine** — Python `ast` + custom rule engine, 4 detectors, 18 rules.
-- **4 detector families** — Logging, Exception handling, Secrets, Code quality.
+- **Static analysis engine** — Python `ast` + custom rule engine, 5 detectors, 28 rules.
+- **5 detector families** — Logging, Exception handling, Secrets, Code quality, Web security.
 - **Risk & findings engine** — severity, confidence, deduplication and a 0–100 risk score.
 - **AI recommendations** — impact + fix per finding via Groq / Gemini / xAI.
 - **Reports** — interactive tables and one-click **JSON** / **HTML** export.
@@ -44,11 +44,11 @@ explain the impact and suggest concrete fixes.
                     │      Python AST + rules      │
                     └───┬───────┬───────┬───────┬──┘
                         │       │       │       │
-              ┌─────────▼─┐ ┌───▼────┐ ┌▼─────┐ ┌▼──────────┐
-              │ Logging   │ │Exception│ │Secret│ │Code Quality│
-              │ Detector  │ │Analyzer │ │Scan. │ │  Rules     │
-              └─────────┬─┘ └───┬────┘ └┬─────┘ └┬──────────┘
-                        └───────┴───────┴────────┘
+         ┌─────────▼─┐ ┌───▼────┐ ┌▼─────┐ ┌▼──────────┐ ┌▼───────────┐
+         │ Logging   │ │Exception│ │Secret│ │Code Quality│ │Web Security│
+         │ Detector  │ │Analyzer │ │Scan. │ │  Rules     │ │  Rules     │
+         └─────────┬─┘ └───┬────┘ └┬─────┘ └┬──────────┘ └┬───────────┘
+                   └───────┴───────┴────────┴─────────────┘
                                     │
                     ┌───────────────▼──────────────┐
                     │  Risk & Findings Engine      │
@@ -170,6 +170,12 @@ GitHub URL parser and the CLI.
 | CQ010 | Code Quality      | Low      | Binding to `0.0.0.0`                           |
 | CQ011 | Code Quality      | Low      | Weak hash (`md5` / `sha1`)                     |
 | CQ013 | Code Quality      | Low      | Race-prone `tempfile.mktemp()`                 |
+| WS001 | Web Security      | High     | Possible SQL injection                         |
+| WS002 | Web Security      | High/Med | TLS verification disabled                      |
+| WS003 | Web Security      | Medium   | Debug mode enabled                             |
+| WS004 | Web Security      | Medium   | Insecure random for a security value           |
+| WS005 | Web Security      | Medium   | Weak cipher / ECB mode                         |
+| WS006 | Web Security      | Medium   | `assert` guarding an authorization check       |
 
 ## Suppressing a finding
 

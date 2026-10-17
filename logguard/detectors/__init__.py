@@ -6,12 +6,14 @@ from .code_quality import CodeQualityDetector
 from .exception_analyzer import ExceptionAnalyzer
 from .logging_detector import LoggingDetector
 from .secret_scanner import SecretScanner
+from .web_security import WebSecurityDetector
 
 DETECTORS: list[type[Detector]] = [
     LoggingDetector,
     ExceptionAnalyzer,
     SecretScanner,
     CodeQualityDetector,
+    WebSecurityDetector,
 ]
 
 __all__ = [
@@ -21,5 +23,6 @@ __all__ = [
     "ExceptionAnalyzer",
     "SecretScanner",
     "CodeQualityDetector",
+    "WebSecurityDetector",
     "DETECTORS",
 ]

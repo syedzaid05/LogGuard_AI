@@ -30,6 +30,7 @@ class Category(str, Enum):
     EXCEPTION = "Exception Handling"
     SECRET = "Secrets"
     QUALITY = "Code Quality"
+    WEB = "Web Security"
 
 
 @dataclass

@@ -49,6 +49,12 @@ RULE_CATALOG = [
     ("CQ010", "Code Quality", "Low", "Binding to 0.0.0.0"),
     ("CQ011", "Code Quality", "Low", "Weak hash (md5 / sha1)"),
     ("CQ013", "Code Quality", "Low", "Race-prone tempfile.mktemp()"),
+    ("WS001", "Web Security", "High", "Possible SQL injection"),
+    ("WS002", "Web Security", "High/Med", "TLS verification disabled"),
+    ("WS003", "Web Security", "Medium", "Debug mode enabled"),
+    ("WS004", "Web Security", "Medium", "Insecure random for a security value"),
+    ("WS005", "Web Security", "Medium", "Weak cipher / ECB mode"),
+    ("WS006", "Web Security", "Medium", "assert guarding an authorization check"),
 ]
 
 

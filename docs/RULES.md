@@ -51,6 +51,17 @@ is redacted before it is stored or displayed.
 | CQ011 | Low      | Low        | `hashlib.md5` / `sha1` without `usedforsecurity=False` *(context-aware)* |
 | CQ013 | Low      | High       | `tempfile.mktemp()` |
 
+## Web Security Detector (`WS`)
+
+| ID    | Severity | Confidence | Trigger |
+|-------|----------|------------|---------|
+| WS001 | High     | High       | SQL passed to `execute`/`executemany` built with f-string, `%`/`+`, or `.format` |
+| WS002 | High/Med | High       | TLS verification off: `verify=False`, `_create_unverified_context`, `check_hostname=False`, `verify_mode=CERT_NONE`, `disable_warnings` |
+| WS003 | Medium   | High/Med   | `run(debug=True)` or `DEBUG = True` |
+| WS004 | Medium   | Medium     | Security-named value generated with the `random` module |
+| WS005 | Medium   | High/Med   | `DES`/`ARC4`/`Blowfish` cipher or `MODE_ECB` |
+| WS006 | Medium   | Medium     | `assert` guarding an authorization/authentication check *(removed under `python -O`)* |
+
 ## Severity and confidence model
 
 - **Severity** — `Critical`, `High`, `Medium`, `Low`, `Info` (weights 10/6/3/1/0.2).

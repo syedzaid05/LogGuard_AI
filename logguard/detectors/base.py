@@ -23,6 +23,31 @@ class Detector:
         raise NotImplementedError
 
 
+def dotted_name(func: ast.AST) -> str:
+    """Return the dotted source name of a Name/Attribute expression."""
+    if isinstance(func, ast.Name):
+        return func.id
+    if isinstance(func, ast.Attribute):
+        base = dotted_name(func.value)
+        return f"{base}.{func.attr}" if base else func.attr
+    return ""
+
+
+def keyword_value(node: ast.Call, key: str) -> ast.AST | None:
+    for kw in node.keywords:
+        if kw.arg == key:
+            return kw.value
+    return None
+
+
+def is_true(value: ast.AST | None) -> bool:
+    return isinstance(value, ast.Constant) and value.value is True
+
+
+def is_false(value: ast.AST | None) -> bool:
+    return isinstance(value, ast.Constant) and value.value is False
+
+
 class Context:
     """Convenience wrapper around a parsed module."""
 

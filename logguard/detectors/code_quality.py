@@ -4,7 +4,15 @@ from __future__ import annotations
 import ast
 
 from ..models import Category, Severity
-from .base import Context, Detector, DetectorResult
+from .base import (
+    Context,
+    Detector,
+    DetectorResult,
+    dotted_name as _dotted,
+    is_false as _is_false,
+    is_true as _is_true,
+    keyword_value as _kwarg,
+)
 
 REQUEST_METHODS = {"get", "post", "put", "patch", "delete", "head", "request", "options"}
 BROAD_REQUEST_BASES = {"requests", "httpx", "aiohttp"}
@@ -267,25 +275,4 @@ class CodeQualityDetector(Detector):
                 return
 
 
-def _dotted(func: ast.AST) -> str:
-    if isinstance(func, ast.Name):
-        return func.id
-    if isinstance(func, ast.Attribute):
-        base = _dotted(func.value)
-        return f"{base}.{func.attr}" if base else func.attr
-    return ""
 
-
-def _kwarg(node: ast.Call, key: str):
-    for kw in node.keywords:
-        if kw.arg == key:
-            return kw.value
-    return None
-
-
-def _is_true(value) -> bool:
-    return isinstance(value, ast.Constant) and value.value is True
-
-
-def _is_false(value) -> bool:
-    return isinstance(value, ast.Constant) and value.value is False

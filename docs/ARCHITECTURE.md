@@ -43,7 +43,9 @@ Unparseable Python is still secret-scanned and the `SyntaxError` is reported.
 - `base.py` — `Detector` interface, `DetectorResult`, and `Context` with
   `make(...)` (builds a `Finding`) plus source-line helpers.
 - `logging_detector.py`, `exception_analyzer.py`, `secret_scanner.py`,
-  `code_quality.py` — the rule families documented in `docs/RULES.md`.
+  `code_quality.py`, `web_security.py` — the rule families documented in
+  `docs/RULES.md`. Shared AST helpers (`dotted_name`, `keyword_value`,
+  `is_true`, `is_false`) live in `base.py`.
 
 ### 6. Risk & Findings Engine (`logguard/risk_engine.py`)
 Deduplicates by fingerprint, ranks by severity/score/location, and computes the
