@@ -9,6 +9,15 @@ from dotenv import load_dotenv
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
+# On Streamlit Cloud, secrets live in st.secrets rather than os.environ.
+try:
+    import streamlit as st
+
+    for key, value in st.secrets.items():
+        os.environ.setdefault(key, str(value))
+except Exception:  # not running under Streamlit
+    pass
+
 
 def _get(name: str, default: str = "") -> str:
     return (os.getenv(name) or default).strip()

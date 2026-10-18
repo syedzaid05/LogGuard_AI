@@ -22,6 +22,68 @@ from logguard.secure_processing import ValidationError
 
 st.set_page_config(page_title="LogGuard AI", page_icon="🛡️", layout="wide")
 
+_CSS = """
+<style>
+:root {
+  --lg-green: #2ECC71;
+  --lg-dark: #08110C;
+  --lg-card: #0F1C15;
+  --lg-border: #1E3A28;
+}
+.stApp { background: radial-gradient(1200px 600px at 15% -10%, rgba(46,204,113,0.14), transparent 60%),
+                    radial-gradient(900px 500px at 110% 20%, rgba(39,174,96,0.10), transparent 55%),
+                    var(--lg-dark); }
+section[data-testid="stSidebar"] { background: linear-gradient(180deg, #0B1710 0%, #0E1F14 100%); }
+section[data-testid="stSidebar"] .stRadio label { color: #CDE8D6; }
+
+#lg-hero {
+  background: linear-gradient(135deg, #0E3B22 0%, #14532D 45%, #1E7A46 100%);
+  border: 1px solid var(--lg-border);
+  border-radius: 18px;
+  padding: 22px 28px;
+  margin-bottom: 18px;
+  color: #ECFdf5;
+}
+#lg-hero h1 { margin: 0; font-size: 1.9rem; color: #FFFFFF; }
+#lg-hero p { margin: 6px 0 0; color: #CFF3DE; font-size: 0.95rem; }
+
+div[data-testid="stMetric"] {
+  background: var(--lg-card);
+  border: 1px solid var(--lg-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+div[data-testid="stMetric"] label { color: #8FD9AE !important; }
+div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: #EAFBF1; }
+
+.stButton > button[kind="primary"] {
+  background: linear-gradient(135deg, #27AE60, #2ECC71);
+  border: none; color: #06130B; font-weight: 600;
+}
+.stButton > button[kind="primary"]:hover { filter: brightness(1.08); }
+
+div[role="radiogroup"] label, div[data-testid="stToggle"] { color: #D9EFE3; }
+
+div[data-testid="st.expander"], div[data-testid="stExpander"] {
+  border: 1px solid var(--lg-border) !important;
+  border-radius: 12px !important;
+  background: var(--lg-card) !important;
+}
+h1, h2, h3 { color: #BFF0D4; }
+div[data-testid="stInfo"], div[data-testid="stSuccess"], div[data-testid="stWarning"] { border-radius: 12px; }
+</style>
+"""
+
+
+def _hero(title: str, subtitle: str) -> None:
+    st.markdown(
+        f"<div id='lg-hero'><h1>{title}</h1><p>{subtitle}</p></div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(_CSS, unsafe_allow_html=True)
+
+
 SEVERITY_BADGE = {
     "Critical": "🟥",
     "High": "🟧",
@@ -79,7 +141,7 @@ def _run_scan(bundle, use_ai: bool, provider: str) -> None:
 
 
 def page_dashboard() -> None:
-    st.header("Dashboard")
+    _hero("Dashboard", "LogGuard AI - Python security &amp; logging review")
     result: ScanResult | None = st.session_state.get("result")
 
     if result is None:
@@ -122,7 +184,7 @@ def page_dashboard() -> None:
 
 
 def page_scan() -> None:
-    st.header("Scan")
+    _hero("Scan", "LogGuard AI - Python security &amp; logging review")
     mode = st.radio(
         "Input source",
         ["Paste code", "Upload .py file", "Upload ZIP project", "GitHub repository", "Local folder"],
@@ -201,7 +263,7 @@ def page_scan() -> None:
 
 
 def page_findings() -> None:
-    st.header("Findings")
+    _hero("Findings", "LogGuard AI - Python security &amp; logging review")
     result: ScanResult | None = st.session_state.get("result")
     if result is None or not result.findings:
         st.info("No findings to show. Run a scan first.")
@@ -257,7 +319,7 @@ def page_findings() -> None:
 
 
 def page_reports() -> None:
-    st.header("Reports")
+    _hero("Reports", "LogGuard AI - Python security &amp; logging review")
     result: ScanResult | None = st.session_state.get("result")
     if result is None:
         st.info("Run a scan to generate reports.")
@@ -317,6 +379,30 @@ def main() -> None:
     st.sidebar.divider()
     st.sidebar.caption("Static analysis is heuristic - always review findings in context.")
 
+    st.sidebar.divider()
+    with st.sidebar.expander("Advanced settings"):
+        st.caption("Placeholder - these options will be wired to the scanner once supported.")
+        st.multiselect(
+            "Detectors",
+            ["logging", "exceptions", "secrets", "code_quality"],
+            disabled=True,
+            help="Enable/disable individual detectors.",
+        )
+        st.text_input(
+            "Exclude patterns",
+            value="tests/, venv/, __pycache__/",
+            disabled=True,
+            help="Glob patterns for files to skip during scans.",
+        )
+        st.slider("Minimum severity", 0, 4, 0, disabled=True, help="Filter findings below this level.")
+        st.selectbox(
+            "Report format", ["JSON + HTML", "JSON only", "HTML only"], disabled=True
+        )
+        st.toggle("Strict mode", disabled=True, help="Treat warnings as failures.")
+
 
 if __name__ == "__main__":
     main()
+
+
+
