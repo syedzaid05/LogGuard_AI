@@ -9,18 +9,20 @@ from dotenv import load_dotenv
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
-# On Streamlit Cloud, secrets live in st.secrets rather than os.environ.
 try:
     import streamlit as st
-
-    for key, value in st.secrets.items():
-        os.environ.setdefault(key, str(value))
 except Exception:  # not running under Streamlit
-    pass
+    st = None
 
 
 def _get(name: str, default: str = "") -> str:
-    return (os.getenv(name) or default).strip()
+    value = os.getenv(name)
+    if not value and st is not None:
+        try:
+            value = st.secrets.get(name, "")
+        except Exception:  # secrets file may not exist
+            value = ""
+    return (value or default).strip()
 
 
 # Groq Cloud (OpenAI-compatible). Keys start with "gsk_".
