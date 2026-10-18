@@ -45,24 +45,40 @@ def default_provider() -> str:
     return ""
 
 
+def _chat_attempt(prompt: str, system: str, provider: str) -> AIMessage:
+    if provider == "groq":
+        return _openai_chat(prompt, system, "groq", config.GROQ_API_KEY,
+                            config.GROQ_API_BASE, config.GROQ_MODEL)
+    if provider == "xai":
+        return _openai_chat(prompt, system, "xai", config.XAI_API_KEY,
+                            config.XAI_API_BASE, config.XAI_MODEL)
+    if provider == "gemini":
+        return _gemini_chat(prompt, system)
+    return AIMessage(False, "", provider, f"Unknown provider: {provider}")
+
+
 def chat(prompt: str, provider: str | None = None, system: str = SYSTEM_PROMPT) -> AIMessage:
+    """Call the primary provider, falling back to the next configured one on failure."""
     provider = provider or default_provider()
     if not provider:
         return AIMessage(False, "", "", _AI_UNAVAILABLE)
-    try:
-        if provider == "groq":
-            return _openai_chat(prompt, system, "groq", config.GROQ_API_KEY,
-                                config.GROQ_API_BASE, config.GROQ_MODEL)
-        if provider == "xai":
-            return _openai_chat(prompt, system, "xai", config.XAI_API_KEY,
-                                config.XAI_API_BASE, config.XAI_MODEL)
-        if provider == "gemini":
-            return _gemini_chat(prompt, system)
-        return AIMessage(False, "", provider, f"Unknown provider: {provider}")
-    except requests.RequestException as exc:
-        return AIMessage(False, "", provider, f"Network error: {exc}")
-    except Exception as exc:  # noqa: BLE001
-        return AIMessage(False, "", provider, f"{type(exc).__name__}: {exc}")
+
+    status = config.available_providers()
+    fallbacks = [p for p, ok in status.items() if ok and p != provider]
+    candidates = [provider, *fallbacks]
+
+    for index, name in enumerate(candidates):
+        try:
+            return _chat_attempt(prompt, system, name)
+        except requests.RequestException:
+            if index == len(candidates) - 1:
+                return AIMessage(False, "", name, "Network error: all providers unreachable.")
+            continue
+        except Exception as exc:  # noqa: BLE001
+            if index == len(candidates) - 1:
+                return AIMessage(False, "", name, f"{type(exc).__name__}: {exc}")
+            continue
+    return AIMessage(False, "", provider, _AI_UNAVAILABLE)
 
 
 def enrich_findings(findings: list[Finding], provider: str | None = None, limit: int = 20) -> AIMessage:
