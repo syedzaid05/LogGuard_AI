@@ -97,12 +97,9 @@ def _init_state() -> None:
     st.session_state.setdefault("result", None)
 
 
-def _sidebar() -> str:
+def _sidebar() -> None:
     st.sidebar.title("🛡️ LogGuard AI")
     st.sidebar.caption(f"v{__version__} - Python security & logging review")
-    page = st.sidebar.radio(
-        "Navigate", ["Dashboard", "Scan", "Findings", "Reports"], label_visibility="collapsed"
-    )
 
     st.sidebar.divider()
     status = ai_module.providers_status()
@@ -110,8 +107,12 @@ def _sidebar() -> str:
     for name, ok in status.items():
         st.sidebar.write(("✅ " if ok else "⚪ ") + name.capitalize())
     if not any(status.values()):
-        st.sidebar.caption("Add GROK_API_KEY or GEMINI_API_KEY to `.env` to enable AI.") 
-    return page
+        st.sidebar.caption("Add GROK_API_KEY or GEMINI_API_KEY to `.env` to enable AI.")  # noqa: E501
+
+    result: ScanResult | None = st.session_state.get("result")
+    if result is not None:
+        st.sidebar.divider()
+        st.sidebar.metric("Findings", len(result.findings))
 
 
 def _run_scan(bundle, use_ai: bool, provider: str) -> None:
@@ -368,18 +369,21 @@ def _rank(sev: str) -> int:
 
 def main() -> None:
     _init_state()
-    page = _sidebar()
-    {
-        "Dashboard": page_dashboard,
-        "Scan": page_scan,
-        "Findings": page_findings,
-        "Reports": page_reports,
-    }[page]()
+    _sidebar()
 
     st.sidebar.divider()
     st.sidebar.caption("Static analysis is heuristic - always review findings in context.")
 
-    st.sidebar.divider()
+    tabs = st.tabs(["Dashboard", "Scan", "Findings", "Reports"])
+    with tabs[0]:
+        page_dashboard()
+    with tabs[1]:
+        page_scan()
+    with tabs[2]:
+        page_findings()
+    with tabs[3]:
+        page_reports()
+
     with st.sidebar.expander("Advanced settings"):
         st.caption("Placeholder - these options will be wired to the scanner once supported.")
         st.multiselect(
