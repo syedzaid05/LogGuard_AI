@@ -35,6 +35,8 @@ Low    LG001  src/requests/help.py:128   print() used instead of a logger
 
 ## Features
 
+- **One-page tabbed UI** — Dashboard, Scan, Findings and Reports live side by side
+  in a single-page tab layout, with the AI provider status in the sidebar.
 - **Multiple inputs** — pasted code, `.py` file, `.zip` project, local folder, GitHub repo.
 - **Static analysis engine** — Python `ast` + custom rule engine, 5 detectors, 28 rules.
 - **5 detector families** — Logging, Exception handling, Secrets, Code quality, Web security.
@@ -50,9 +52,9 @@ Low    LG001  src/requests/help.py:128   print() used instead of a logger
 
 ```
                     ┌──────────────────────────────┐
-                    │          Streamlit UI         │
-                    │ Dashboard·Upload·Scan·       │
-                    │ Findings·Reports             │
+                    │  Streamlit UI (single page)  │
+                    │ Dashboard·Scan·Findings·     │
+                    │ Reports  (tab navigation)    │
                     └───────────────┬──────────────┘
                                     │
                     ┌───────────────▼──────────────┐
@@ -139,10 +141,13 @@ streamlit run app.py
 
 Then open the URL Streamlit prints (default http://localhost:8501).
 
-1. **Scan** → pick an input source (paste, `.py`, ZIP, GitHub repo, or local folder) and run.
-2. **Dashboard** → risk score, severity breakdown, top findings.
-3. **Findings** → filter by severity/category, inspect code + recommendation + AI fix.
-4. **Reports** → download JSON or HTML.
+1. **Dashboard → Scan → Findings → Reports render as tabs on a single page** —
+   switch tabs instead of navigating (the sidebar shows AI provider status and
+   a findings count after a scan).
+2. **Scan** → pick an input source (paste, `.py`, ZIP, GitHub repo, or local folder) and run.
+3. **Dashboard** → risk score, severity breakdown, top findings.
+4. **Findings** → filter by severity/category, inspect code + recommendation + AI fix.
+5. **Reports** → download JSON or HTML.
 
 ### Scan a GitHub repository
 
